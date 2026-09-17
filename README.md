@@ -133,7 +133,6 @@ configuration and records the whole decision trail on a tamper-evident hash chai
 │   ├── models/                        # Weka .model files (EMPTY — see Known Limitations)
 │   ├── uploads/                       # Upload volume mount
 │   ├── dataset/                       # PCAP training data (mounted at /app/dataset)
-│   ├── ORACLE_MASTER_PROMPT_v5.md     # Design specification
 │   └── src/
 │       ├── main/
 │       │   ├── java/com/ipsec/
