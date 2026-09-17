@@ -234,7 +234,7 @@ mvn clean spring-boot:run              # run the app on the host
 > **Use `127.0.0.1`, not `localhost`.** On Windows, `localhost` may resolve to IPv6 `::1`, where a stale
 > WSL relay can hold port 8080 while Docker's IPv4 proxy works fine. See [Troubleshooting](#-troubleshooting).
 
-> 📌 **Important — Accessing via Wi-Fi / Local Network**: To open the dashboard from another phone, tablet, or laptop on the same Wi-Fi or LAN network, replace `127.0.0.1` in the URL with your host computer's active IPv4 address (for example: `http://10.187.132.66:8080/login`). Run `ipconfig` on Windows or `ip a` on Linux to check your IPv4 address.
+> 📌 **Important — Accessing via Wi-Fi / Local Network**: To open the dashboard from another phone, tablet, or laptop on the same Wi-Fi or LAN network, replace `127.0.0.1` in the URL with your host computer's active IPv4 address (for example: `http://<YOUR_SYSTEM_IP>:8080/login`). Run `ipconfig` on Windows or `ip a` on Linux to check your system's IPv4 address.
 
 **Authentication & Credentials:** Account credentials and administrator access are dynamically managed and bootstrapped on startup by the Spring Boot backend (`AdminBootstrap` / `SecurityBlockingService`). Password hashes are stored securely using BCrypt encryption with IP and device fingerprint whitelisting.
 
