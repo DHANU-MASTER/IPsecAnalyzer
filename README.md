@@ -234,7 +234,7 @@ mvn clean spring-boot:run              # run the app on the host
 > **Use `127.0.0.1`, not `localhost`.** On Windows, `localhost` may resolve to IPv6 `::1`, where a stale
 > WSL relay can hold port 8080 while Docker's IPv4 proxy works fine. See [Troubleshooting](#-troubleshooting).
 
-**Demo credentials:** `admin` / `Admin@123`
+**Authentication & Credentials:** Account credentials and administrator access are dynamically managed and bootstrapped on startup by the Spring Boot backend (`AdminBootstrap` / `SecurityBlockingService`). Password hashes are stored securely using BCrypt encryption with IP and device fingerprint whitelisting.
 
 ---
 

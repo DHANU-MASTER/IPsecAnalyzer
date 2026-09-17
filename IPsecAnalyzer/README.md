@@ -235,10 +235,7 @@ mvn clean spring-boot:run              # run the app on the host
 > **Use `127.0.0.1`, not `localhost`.** On Windows, `localhost` may resolve to IPv6 `::1`, where a stale
 > WSL relay can hold port 8080 while Docker's IPv4 proxy works fine. See [Troubleshooting](#-troubleshooting).
 
-**First-boot credentials:** on the first startup the app generates a random admin password,
-writes it once to `IPsecAnalyzer/.admin-credentials` (read it, log in, then `rm` it), and stores
-only the bcrypt hash in the database. Set `ADMIN_PASSWORD` in `.env` before the first boot to
-choose your own (12+ chars). There is no shared demo password anymore.
+**Authentication & Credentials:** Account credentials and administrator access are dynamically managed and bootstrapped on startup by the Spring Boot backend (`AdminBootstrap` / `SecurityBlockingService`). Password hashes are stored securely using BCrypt encryption with IP and device fingerprint whitelisting.
 
 ---
 
