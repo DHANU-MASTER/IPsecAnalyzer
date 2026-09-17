@@ -1,0 +1,80 @@
+services:
+  # ---------------------------------------------------------------
+  # StrongSwan IPsec testbed (2 peers on a private bridge network)
+  #   vpn-client  10.0.1.2   initiator (auto=start)
+  #   vpn-server  10.0.1.3   responder
+  #   traffic-gen 10.0.1.10  traffic source for tunnel load
+  # ---------------------------------------------------------------
+  vpn-client:
+    image: debian:bookworm-slim
+    hostname: vpn-client
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.send_redirects=0
+      - net.ipv4.conf.all.accept_redirects=0
+      - net.ipv4.conf.all.rp_filter=0
+    volumes:
+      - ./config/client:/config:ro
+      - ./scripts:/scripts
+    networks:
+      lab:
+        ipv4_address: 10.0.1.2
+    command: >
+      /bin/sh -c "apt-get update
+      && apt-get install -y --no-install-recommends strongswan iputils-ping curl tcpdump netcat-openbsd
+      && cp /config/ipsec.conf /etc/ipsec.conf
+      && cp /config/ipsec.secrets /etc/ipsec.secrets
+      && chmod 600 /etc/ipsec.secrets
+      && ipsec start
+      && ipsec statusall
+      && tail -f /dev/null"
+
+  vpn-server:
+    image: debian:bookworm-slim
+    hostname: vpn-server
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.send_redirects=0
+      - net.ipv4.conf.all.accept_redirects=0
+      - net.ipv4.conf.all.rp_filter=0
+    volumes:
+      - ./config/server:/config:ro
+      - ./scripts:/scripts
+    networks:
+      lab:
+        ipv4_address: 10.0.1.3
+    command: >
+      /bin/sh -c "apt-get update
+      && apt-get install -y --no-install-recommends strongswan iputils-ping curl tcpdump netcat-openbsd
+      && cp /config/ipsec.conf /etc/ipsec.conf
+      && cp /config/ipsec.secrets /etc/ipsec.secrets
+      && chmod 600 /etc/ipsec.secrets
+      && ipsec start
+      && ipsec statusall
+      && tail -f /dev/null"
+
+  # Adds background load on the tunnel: run scripts/traffic.sh from any peer.
+  traffic-gen:
+    image: debian:bookworm-slim
+    hostname: traffic-gen
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./scripts:/scripts
+    networks:
+      lab:
+        ipv4_address: 10.0.1.10
+    entrypoint: /bin/sh -c "apt-get update && apt-get install -y --no-install-recommends iputils-ping curl netcat-openbsd dnsutils && sleep infinity"
+
+networks:
+  lab:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.1.0/24

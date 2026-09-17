@@ -1,0 +1,17 @@
+# Maven build outputs
+target/
+bin/
+*.class
+*.jar
+*.war
+
+# IDE files
+.idea/
+*.iml
+
+# Local secrets
+.env
+
+# Logs & temp uploads
+*.log
+uploads/

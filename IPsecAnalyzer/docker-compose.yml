@@ -1,0 +1,179 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ipsec_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-securepass123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Spring Boot Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ipsec_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-securepass123}
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-prod}
+      MESH_SIGNING_KEY: ${MESH_SIGNING_KEY:-demo-mesh-key-change-me}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./dataset:/app/dataset
+      - ./models:/app/models
+      - ./uploads:/tmp/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+  postgres_gov:
+  postgres_bank:
+  postgres_tel:
+
+---
+# ---------------------------------------------------------------------------
+# National mesh profile: three REAL analyzer instances that sign and gossip
+# threat events over HTTP. Run with:  docker compose --profile mesh up -d
+#   mesh-gov      (Government & Public Sector)
+#   mesh-banking  (Banking & Financial)
+#   mesh-telecom  (Telecom)
+# All three share MESH_SIGNING_KEY, so every event is HMAC-verifiable at any
+# node; each instance registers the other two via MESH_PEERS at startup.
+# ---------------------------------------------------------------------------
+services:
+
+  postgres-gov:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ipsec_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-securepass123}
+    volumes:
+      - postgres_gov:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-bank:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ipsec_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-securepass123}
+    volumes:
+      - postgres_bank:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-tel:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ipsec_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-securepass123}
+    volumes:
+      - postgres_tel:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mesh-gov:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment: &mesh_env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-gov:5432/ipsec_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-securepass123}
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-prod}
+      MESH_NODE_ID: mesh-gov
+      MESH_SECTOR: Government & Public Sector
+      MESH_REGION: Delhi
+      MESH_SIGNING_KEY: ${MESH_SIGNING_KEY:-demo-mesh-key-change-me}
+      MESH_PEERS: >-
+        mesh-banking@Banking & Financial@Mumbai@http://mesh-banking:8080;
+        mesh-telecom@Telecom@Chennai@http://mesh-telecom:8080
+    depends_on:
+      postgres-gov:
+        condition: service_healthy
+    volumes:
+      - ./models:/app/models:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mesh-banking:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      <<: *mesh_env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-bank:5432/ipsec_db
+      MESH_NODE_ID: mesh-banking
+      MESH_SECTOR: Banking & Financial
+      MESH_REGION: Mumbai
+      MESH_PEERS: >-
+        mesh-gov@Government & Public Sector@Delhi@http://mesh-gov:8080;
+        mesh-telecom@Telecom@Chennai@http://mesh-telecom:8080
+    depends_on:
+      postgres-bank:
+        condition: service_healthy
+    volumes:
+      - ./models:/app/models:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mesh-telecom:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      <<: *mesh_env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-tel:5432/ipsec_db
+      MESH_NODE_ID: mesh-telecom
+      MESH_SECTOR: Telecom
+      MESH_REGION: Chennai
+      MESH_PEERS: >-
+        mesh-gov@Government & Public Sector@Delhi@http://mesh-gov:8080;
+        mesh-banking@Banking & Financial@Mumbai@http://mesh-banking:8080
+    depends_on:
+      postgres-tel:
+        condition: service_healthy
+    volumes:
+      - ./models:/app/models:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

@@ -1,0 +1,30 @@
+# Maven build outputs
+**/target/
+**/bin/
+*.class
+*.jar
+*.war
+
+# IDE configuration files
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+# Local secrets & environment templates
+.env
+*.env.local
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Application logs
+*.log
+logs/
+
+# Uploads & temporary PCAP files
+IPsecAnalyzer/uploads/
+*.pcapng
