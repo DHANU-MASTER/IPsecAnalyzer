@@ -235,7 +235,10 @@ mvn clean spring-boot:run              # run the app on the host
 
 > 📌 **Important — Accessing via Wi-Fi / Local Network**: To open the dashboard from another phone, tablet, or laptop on the same Wi-Fi or LAN network, replace `127.0.0.1` in the URL with your host computer's active IPv4 address (for example: `http://<YOUR_SYSTEM_IP>:8080/login`). Run `ipconfig` on Windows or `ip a` on Linux to check your system's IPv4 address.
 
-**Authentication & Credentials:** Account credentials and administrator access are dynamically managed and bootstrapped on startup by the Spring Boot backend (`AdminBootstrap` / `SecurityBlockingService`). Password hashes are stored securely using BCrypt encryption with IP and device fingerprint whitelisting.
+**Authentication & Credentials:** Account credentials and administrator access are dynamically managed and bootstrapped on startup by the Spring Boot backend (`AdminBootstrap` / `SecurityBlockingService`).
+* **Admin Username**: `admin`
+* **Admin Password**: `Admin@123`
+* **Security**: Password hashes are stored securely using BCrypt encryption with IP and device fingerprint whitelisting.
 
 ---
 
